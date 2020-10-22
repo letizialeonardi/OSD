@@ -1,5 +1,6 @@
 # OSD
 Operating System Design-UNIMORE
+
 L'intero materiale puo' essere scaricato con il comando seguente:
 
     git clone https://github.com/letizialeonardi/OSD.git
