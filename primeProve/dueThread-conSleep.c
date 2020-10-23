@@ -6,7 +6,7 @@
 
 void *PrintHello(void *id)
 {
-   int *pi = (void *)id;
+   int *pi = (int *)id;
    printf("Thread%d partito: Hello World!\n", *pi);
    return NULL;
 }
