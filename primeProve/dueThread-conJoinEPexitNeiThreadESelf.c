@@ -5,7 +5,7 @@
 
 void *PrintHello(void *id)
 {
-   int *pi = (void *)id;
+   int *pi = (int *)id;
    int *ptr;
 
    ptr = (int *) malloc( sizeof(int));
@@ -45,8 +45,7 @@ int main ()
    {
         taskids[i] = i;
    	printf("Sto per creare il thread %d-esimo\n", taskids[i]);
-        if (pthread_create(&thread[i], NULL, PrintHello, (void *) (&taskids[i])) !=
- 0)
+        if (pthread_create(&thread[i], NULL, PrintHello, (void *) (&taskids[i])) != 0)
                 printf("SONO IL MAIN E CI SONO STATI PROBLEMI DELLA CREAZIONE DEL thread %d-esimo\n", taskids[i]);
 	printf("SONO IL MAIN e ho creato il Pthread %i-esimo con id=%lu\n", i, thread[i]);
     }
@@ -57,7 +56,6 @@ int main ()
    	pthread_join(thread[i], (void**) & p);
 	ris= *p;
 	printf("Pthread %d-esimo restituisce %d\n", i, ris);
-	//free(p);
    }
  
    exit(0);

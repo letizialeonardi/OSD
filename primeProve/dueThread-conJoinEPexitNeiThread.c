@@ -5,7 +5,7 @@
 
 void *PrintHello(void *id)
 {
-   int *pi = (void *)id;
+   int *pi = (int *)id;
    int *ptr;
 
    ptr = (int *) malloc( sizeof(int));
@@ -24,7 +24,7 @@ void *PrintHello(void *id)
 int main ()
 {
    pthread_t *thread;
-   int *taskids[NUM_THREADS];
+   int *taskids;
    int i;
    int *p;
 
@@ -35,21 +35,20 @@ int main ()
         exit(1);
    }
 
+   taskids = (int *) malloc(NUM_THREADS * sizeof(int));
+   if (taskids == NULL)
+   {
+        printf("Problemi con l'allocazione dell'array taskids\n");
+        exit(2);
+    }
+
    for (i=0; i < NUM_THREADS; i++)
    {
-        //printf("Sto per creare il thread %d-esimo\n", i);
-        taskids[i] = (int *) malloc(sizeof(int));
-        if (taskids[i] == NULL)
-        {
-                printf("Problemi con l'elemento %i-esimo di taskids\n", i);
-                exit(2);
-        }
-
-        *taskids[i] = i;
-   	printf("Sto per creare il thread %d-esimo\n", *taskids[i]);
-        if (pthread_create(&thread[i], NULL, PrintHello, (void *) taskids[i]) !=
- 0)
-                printf("SONO IL MAIN E CI SONO STATI PROBLEMI DELLA CREAZIONE DEL thread %d-esimo\n", *taskids[i]);
+        taskids[i] = i;
+        printf("Sto per creare il thread %d-esimo\n", taskids[i]);
+        if (pthread_create(&thread[i], NULL, PrintHello, (void *) (&taskids[i]))
+ != 0)
+                printf("SONO IL MAIN E CI SONO STATI PROBLEMI DELLA CREAZIONE DEL thread %d-esimo\n", taskids[i]);
     }
 
    for (i=0; i < NUM_THREADS; i++)
