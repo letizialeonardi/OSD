@@ -13,7 +13,7 @@ void *PrintHello(void *id)
    if (ptr == NULL)
    {
         printf("Problemi con l'allocazione di ptr\n");
-        exit(5);
+        exit(-1);
    }
 
    printf("Thread%d partito: Hello World! Ho come identificatore %lu\n", *pi, pthread_self());
