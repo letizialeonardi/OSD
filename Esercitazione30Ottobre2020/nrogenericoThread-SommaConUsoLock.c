@@ -17,7 +17,7 @@ void *Incremento(void *id)
    if (ptr == NULL)
    {
         printf("Problemi con l'allocazione di ptr\n");
-        exit(5);
+        exit(-1);
    }
 
    /* ogni thread figlio incrementa di 1 il valore della variabile globale x (CO
