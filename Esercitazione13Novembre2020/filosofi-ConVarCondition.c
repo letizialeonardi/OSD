@@ -1,5 +1,5 @@
 /* OBIETTIVO: generare i 5 thread che rappresentano i filosofi: PROBLEMA DEI FILOSOFI RISOLTO CON UNA SOLUZIONE CHE USA UN MUTEX E UN ARRAY DI VARIABILI ONDIZIONE. 
- * La fase in cui il filosofo mangia e' stata simulata con una sleep mentre quella in cui pensa e' stata simulata con un descheduling.
+ *  La fase in cui il filosofo mangia e' stata simulata con una sleep mentre quella in cui pensa e' stata simulata con un descheduling.
  * Ogni thread torna al main il proprio numero d'ordine. */
 #define _GNU_SOURCE             /* Per non avere warning utilizzando la pthread_yield - See feature_test_macros(7) */
 #include <pthread.h>
@@ -13,9 +13,9 @@ typedef enum {false, true} Boolean;
 typedef enum {thinking, hungry, eating} Stati;
 
 /* variabili globali */
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER; /* semaforo di mutua esclusione per l'accesso a tutte le variabili condivise (simula il semaforo di mutua esclusione associato ad una istanza di tipo monitor) */
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER; /* semaforo di mutua esclusione per l'accesso a tutte le variabili condivise (simula il semaforo di mutua esclusiome associato ad una istanza di tipo monitor) */
 Stati STATO[5] = { thinking, thinking, thinking, thinking, thinking }; /* array che mantiene lo stato di ogni filosofo: all'inizio sono tutti in stato thinking */
-pthread_cond_t COND[5] = { PTHREAD_COND_INITIALIZER, PTHREAD_COND_INITIALIZER, PTHREAD_COND_INITIALIZER, PTHREAD_COND_INITIALIZER, PTHREAD_COND_INITIALIZER }; /* array di variabili condizione ognuna con valore iniziale di default: ogni filosofo si sospende sulla sua variabile condizione se e' in stato hungry ma i due bastoncini sono occupati */
+pthread_cond_t COND[5] = { PTHREAD_COND_INITIALIZER, PTHREAD_COND_INITIALIZER, PTHREAD_COND_INITIALIZER, PTHREAD_COND_INITIALIZER, PTHREAD_COND_INITIALIZER }; /* array di variabili condizione ognuna con valore iniziale di deafult: ogni filosofo si sospende sulla sua variabile condizione se e' in stato hungry ma i due bastoncini sono occupati */
 
 void test(int); /* funzione interna */
 
@@ -24,7 +24,7 @@ void Pick_up(int i)
 	pthread_mutex_lock(&mutex); 		/* simulazione di inizio procedura entry del monitor */
 	STATO[i] = hungry;
 	test(i);
-	if (STATO[i] != eating)		 	/* N.B. ABBIAMO LASCIATO l'if presente nella soluzione presentata a lezione */ 
+	while (STATO[i] != eating)		 /* N.B. l'if presente nella soluzione presentata a lezionei e' stato sostituito con un while */ 
 		pthread_cond_wait(&(COND[i]), &mutex);
 	pthread_mutex_unlock(&mutex);		/* simulazione di termine procedura entry del monitor */
 }

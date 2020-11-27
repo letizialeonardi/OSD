@@ -1,4 +1,5 @@
-/* OBIETTIVO: generare un numero non noto di threads che risolvono il problema LETTORI E SCRITTORI senza starvationi RISOLTO CON UNA SOLUZIONE CHE USA UN MUTEX E DUE VARIABILI CONDIZIONE.
+/* ATTENZIONE: DOVENDO INTRODURRE UN WHILE SULLE WAIT E' STATO NECESSARIO CAMBIARE LA SOLUZIONE RISPETTO A QUELLA MOSTRATA A LEZIONE: NON VIENE USATO IL RISVEGLIO A CASCATA E NELLA FINE SCRITTURA VENGONO RISVEGLIATI TUTTI I LETTORI E ANCHE UNO SCRITTORE: N.B. QUESTA SOLUZIONE POTREBBE PROVOCARE STARVATION DEI LETTORI! */
+/* OBIETTIVO: generare un numero non noto di threads che risolvono il problema LETTORI E SCRITTORI senza starvationi RISOLTO CON UNA SOLUZIONE CHE USA UN MUTEX E DUE VARIABILI ONDIZIONE.
  * Il numero di lettori e il numero di scrittori, per semplicita', e' uguale: prima vengono creati un quarto di thread classificati come lettori, poi un quarto come scrittori e poi, di nuovo, un quarto di lettori, e quindi l'ultimo quarto con scrittori. 
  * L'utilizzo della risorsa in lettura o in scrittura e' stato simulato con una sleep. 
  * Ogni thread torna al main il proprio numero d'ordine. */
@@ -10,7 +11,7 @@
 typedef enum {false, true} Boolean;
 
 /* variabili globali */
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER; 	/* semaforo binario per la mutua esclusione nell'accesso alle variabili introdotte (simula il semaforo di mutua esclusione associato ad una istanza di tipo monitor) */
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER; 	/* semaforo binario per la mutua esclusione nell'accesso alle variabili introdotte (simula il semaforo di mutua esclusiome associato ad una istanza di tipo monitor) */
 int num_lettori = 0;					/* numero lettori attivi */
 Boolean occupato = false;				/* indica se la risorsa e' occupata da uno scrittore */
 int lettori_bloccati = 0;				/* numero di lettori bloccati: N.B. nella soluzione presentata a lezione si era usata la funzione QUEUE su un variabile condizion! */
@@ -20,49 +21,52 @@ pthread_cond_t ok_scrittura = PTHREAD_COND_INITIALIZER;	/* condition variable su
 
 void Inizio_lettura()
 {
-   	pthread_mutex_lock(&mutex);			/* simulazione di inizio procedura entry del monitor */
-	if (occupato || (scrittori_bloccati != 0)) 	/* N.B. ABBIAMO LASCIATO l'if presente nella soluzione presentata a lezione */
+   	pthread_mutex_lock(&mutex);	/* simulazione di inizio procedura entry del monitor */
+	while (occupato || (scrittori_bloccati != 0)) 	/* N.B. l'if presente nella soluzione presentata a lezione e' stato sostituito da un while */
 	{
 		lettori_bloccati++;
 		pthread_cond_wait(&ok_lettura, &mutex);
                 lettori_bloccati--;
 	}
 	num_lettori++;
-	pthread_cond_signal(&ok_lettura);
-   	pthread_mutex_unlock(&mutex); 			/* simulazione di termine procedura entry del monitor */
+   	pthread_mutex_unlock(&mutex); 	/* simulazione di termine procedura entry del monitor */
 }
 
 void Fine_lettura()
 {
-        pthread_mutex_lock(&mutex);			/* simulazione di inizio procedura entry del monitor */
+        pthread_mutex_lock(&mutex);	/* simulazione di inizio procedura entry del monitor */
         num_lettori--;
 	if (num_lettori == 0)
         	pthread_cond_signal(&ok_scrittura);
-        pthread_mutex_unlock(&mutex);	 		/* simulazione di termine procedura entry del monitor */
+        pthread_mutex_unlock(&mutex);	 /* simulazione di termine procedura entry del monitor */
 }
 
 void Inizio_scrittura()
 {
-   	pthread_mutex_lock(&mutex);			/* simulazione di inizio procedura entry del monitor */
-	if (num_lettori != 0 || occupato)		/* N.B. ABBIAMO LASCIATO l'if presente nella soluzione presentata a lezione */
+   	pthread_mutex_lock(&mutex);	/* simulazione di inizio procedura entry del monitor */
+	while (num_lettori != 0 || occupato)	/* N.B. l'if presente nella soluzione presentata a lezione e' stato sostituito da un while */
 	{
 		scrittori_bloccati++;
 		pthread_cond_wait(&ok_scrittura, &mutex);
 		scrittori_bloccati--;
 	}
 	occupato = true;
-   	pthread_mutex_unlock(&mutex);			/* simulazione di termine procedura entry del monitor */
+   	pthread_mutex_unlock(&mutex);	/* simulazione di termine procedura entry del monitor */
 }
 
 void Fine_scrittura()
 {
-        pthread_mutex_lock(&mutex);			/* simulazione di inizio procedura entry del monitor */
+	int k;				/* indice per for di signal per tutti i lettori sospesi */
+	int l_b;			/* copia locale di lettori_bloccati per 'congelare' il suo valore */
+        pthread_mutex_lock(&mutex);	/* simulazione di inizio procedura entry del monitor */
 	occupato = false;
-	if (lettori_bloccati > 0)
-		pthread_cond_signal(&ok_lettura);
-	else 
-        	pthread_cond_signal(&ok_scrittura);
-	pthread_mutex_unlock(&mutex);	 		/* simulazione di termine procedura entry del monitor */
+	/* lo schema con il while nei lettori obbliga a dover: 1) risvegliare tutti i lettori (non usando il risveglio a cascata); 2) a non condizionare i risvegli altrimenti si potrebbe creare un deadlock dato che se i lettori si risospendono a causa di scrittori in coda poi nessuno li risveglia piu' */
+	/* di fatto in questo modo si potrebbe provocare starvation di lettori! */
+	l_b=lettori_bloccati;
+	for (k = 0; k < l_b; k++)
+			pthread_cond_signal(&ok_lettura);
+	pthread_cond_signal(&ok_scrittura);
+	pthread_mutex_unlock(&mutex);	 /* simulazione di termine procedura entry del monitor */
 }
 
 void *eseguiLettura(void *id)
@@ -82,7 +86,7 @@ void *eseguiLettura(void *id)
    sleep(5); /* simuliamo l'uso della risorsa in lettura */
    Fine_lettura();
 
-   /* pthread torna il valore intero dell'indice */
+   /* pthread passare il valore intero dell'indice */
    *ptr = *pi;
    pthread_exit((void *) ptr);
 }
@@ -104,7 +108,7 @@ void *eseguiScrittura(void *id)
    sleep(5); /* simuliamo l'uso della risorsa in scrittura */
    Fine_scrittura();
 
-   /* pthread torna il valore intero dell'indice */
+   /* pthread passare il valore intero dell'indice */
    *ptr = *pi;
    pthread_exit((void *) ptr);
 }
