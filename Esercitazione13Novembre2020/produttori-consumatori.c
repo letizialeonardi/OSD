@@ -60,7 +60,6 @@ void *eseguiProduttore(void *id)
 	INSERIMENTO(messaggio);
 	/* NOTA BENE: IL MESSAGGIO DEVE ESSERE COPIATO NELLA VARIABILE LOCALE messaggio DEL THREAD CONSUMATORE; RISULTA SCORRETTO TORNARE SEMPLICEMENTE UN PUNTATORE ALL'ELEMENTO DEL BUFFER POICHE' TALE ELEMENTO POTREBBE POI ESSERE MODIFICATO E QUINDI NON ESSERE PIU' DISPONIBILE NELLA SUA 'FORMA' ORIGINALE PER GLI SCOPI DEL CONSUMATORE! */
    	printf("PRODUTTORE-Thread%d e identificatore %lu: ho depositato %s\n", *pi, pthread_self(), messaggio);
-	punt1 = (punt1 + 1) % N;
         /* fine sezione critica */
    	pthread_mutex_unlock(&MUTEX1);
         sem_post(&messaggio_disponibile);
